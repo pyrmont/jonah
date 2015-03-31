@@ -1,0 +1,3 @@
+class EditController < BaseController
+
+end

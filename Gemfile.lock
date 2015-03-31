@@ -4,6 +4,7 @@ GEM
     daemons (1.2.2)
     erubis (2.7.0)
     eventmachine (1.0.7)
+    git (1.2.9.1)
     rack (1.6.0)
     rack-protection (1.5.3)
       rack
@@ -23,6 +24,7 @@ PLATFORMS
 
 DEPENDENCIES
   erubis
+  git
   rake
   sinatra
   thin

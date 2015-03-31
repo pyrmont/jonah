@@ -19,6 +19,9 @@ class ListController < BaseController
   end
 
   def branch(path)
+    # Return an error if the directory check fails.
+    return 'Error' if reject? path
+
   end
 
   private

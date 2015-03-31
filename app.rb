@@ -29,3 +29,11 @@ get '/list/branch/:path' do
   # Display the list again.
   redirect to '/list/' + params[:path]
 end
+
+get '/edit/:path' do
+  # Generate the editor.
+  @content = edit.index params[:path]
+
+  # Render the template.
+  erb :edit
+end

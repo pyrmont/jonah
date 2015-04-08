@@ -6,11 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
   <link rel="stylesheet" href='/stylesheets/normalize.css' type='text/css'>
+  <link rel="stylesheet" href='/stylesheets/screen.css' type='text/css'>
 </head>
 <body>
 
-  <form>
-    <textarea><%= @content['contents'] %></textarea>
+  <h2><%= @content['filename'] %></h2>
+
+  <form action="/edit/save/" method="post">
+    <textarea name="contents"><%= @content['contents'] %></textarea>
+    <input type="submit" value="Save">
   </form>
 
 </body>

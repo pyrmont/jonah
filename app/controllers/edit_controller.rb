@@ -7,11 +7,18 @@ class EditController < ApplicationController
     path = params[:path]
 
     # Return an error if the directory check fails.
-    halt 400, erb(:error) if reject? params[:path]
+    halt 400, erb(:error) if reject? path
+
+    # Decode path.
+    decoded_path = Base64.urlsafe_decode64 path
+
+    @content = Hash.new
+
+    # Add filename.
+    @content['filename'] = File.basename decoded_path
 
     # Add contents of the file.
-    @content = Hash.new
-    @content['contents'] = read_file params[:path]
+    @content['contents'] = read_file decoded_path
 
     puts settings.static
 
@@ -21,11 +28,8 @@ class EditController < ApplicationController
   private
 
     def read_file(path)
-      # Decode path.
-      decoded_path = Base64.urlsafe_decode64 path
-
       # Read contents of file.
-      contents = IO.read decoded_path
+      contents = IO.read path
 
       # Return contents.
       return contents

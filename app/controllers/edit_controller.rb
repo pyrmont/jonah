@@ -13,6 +13,8 @@ class EditController < ApplicationController
     @content = Hash.new
     @content['contents'] = read_file params[:path]
 
+    puts settings.static
+
     erb :edit
   end
 

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>List</title>
+</head>
+<body>
+  <ol>
+    <% for entry in @content['entries'] %>
+      <% if !entry.is_file || @content['is_editable'] %>
+        <li><a href="<%= entry.uri %>"><%= entry.name %></a></li>
+      <% else %>
+        <li><%= entry.name %></li>
+      <% end %>
+    <% end %>
+  </ol>
+</body>
+</html>

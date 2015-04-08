@@ -1,10 +1,15 @@
+require 'base64'
+require 'git'
+
 class EditController < ApplicationController
 
   get '/:path' do
-    # Return an error if the directory check fails.
-    halt 400, 'Error' if reject? params[:path]
+    path = params[:path]
 
-    # Add list of entries to the content.
+    # Return an error if the directory check fails.
+    halt 400, erb(:error) if reject? params[:path]
+
+    # Add contents of the file.
     @content = Hash.new
     @content['contents'] = read_file params[:path]
 
@@ -13,13 +18,12 @@ class EditController < ApplicationController
 
   private
 
-    def reject?(path)
-      return false
-    end
-
     def read_file(path)
+      # Decode path.
+      decoded_path = Base64.urlsafe_decode64 path
+
       # Read contents of file.
-      contents = ''
+      contents = IO.read decoded_path
 
       # Return contents.
       return contents

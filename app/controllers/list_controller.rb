@@ -36,27 +36,6 @@ class ListController < ApplicationController
 
   private
 
-    def reject?(path)
-      # Accept if there is no path.
-      return false if path == nil
-
-      # Reject if path is not base64.
-      begin
-        Base64.urlsafe_decode64(path)
-      rescue ArgumentError
-        return true
-      end
-
-      # Reject if path contains '..'.
-      # TODO: Write this.
-
-      # Reject if path is shorter than content_dir.
-      # TODO: Write this.
-
-      # Otherwise accept.
-      return false
-    end
-
     def build_list(path)
       # Decode path parameter if it exists.
       decoded_path = (path) ? Base64.urlsafe_decode64(path) : false

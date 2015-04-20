@@ -10,46 +10,66 @@ class ListController < ApplicationController
     @is_editable = !@repo.branches[settings.master_branch.to_sym].current
   end
 
+  # DESCRIPTION
+  # List the files in the given path.
+  #
+  # PARAMETERS
+  # :path   (String) A directory somewhere in the content directory. This variable is expected to be
+  #                  Base64-encoded.
+  #
+  # EXPLANATION
+  # First, check if the path has been set (and assigns it nil if not). Then check if the path is valid
+  # and halt processing if not (rendering an error template). If the path is valid, create a content
+  # variable for use in the template. Then render the list template.
   get '/:path?' do
     path = (params[:path]) ? params[:path] : nil
 
-    # Return an error if the directory check fails.
     halt 400, erb(:error) if reject? path
 
-    # Create the @content variable.
     @content = Hash.new
-
-    # Add list of entries to the content.
     @content['entries'] = build_list path
-
-    # Add whether edit mode is on to the content.
     @content['is_editable'] = @is_editable
 
     erb :list
   end
 
+  # DESCRIPTION
+  # Create a branch for the given directory.
+  #
+  # PARAMETERS
+  # :path   (String) A directory somewhere in the content directory. This variable is expected to be
+  #                  Base64-encoded.
+  #
+  # TODO
+  # It makes no sense to have a branch happen relative to a directory. Furthermore, this should be a
+  # post action, not a get action.
   get '/branch/:path' do
-    # Return an error if the directory check fails.
     return 'Error' if reject? path
-
   end
 
   private
 
+    # DESCRIPTION
+    # Create an array of ListItems for a given path (path is expected to be encoded in Base64).
+    #
+    # PARAMETERS
+    # path   (String) A directory somewhere in the content directory. This variable is expected to be
+    #                 Base64-encoded.
+    #
+    # RETURN
+    # Returns an Array of ListItems (possibly empty).
+    #
+    # EXPLANATION
+    # First, decode the path parameter if it exists. Then set the current_dir to this path or, if no
+    # path has been given, to the settings.content_dir variable. Then get the list of files in
+    # current_dir. Based on this list, create a ListItem object and add it to the array. Return the
+    # array.
     def build_list(path)
-      # Decode path parameter if it exists.
       decoded_path = (path) ? Base64.urlsafe_decode64(path) : false
-
-      # Set current directory
       current_dir = (decoded_path) ? decoded_path : settings.content_dir
-
-      # Get the files in the current directory.
       entries = Dir.entries current_dir
 
-      # Create list of files and directories.
       list = Array.new
-
-      # Create a list item object for each entry and add it to the list.
       entries.each do |entry|
         list_item = create_item entry, current_dir
         list.push list_item unless list_item == nil
@@ -58,18 +78,28 @@ class ListController < ApplicationController
       return list
     end
 
-    def create_item(entry, current_dir)
-      # Return nil if entry is the current directory, the Git directory or the parent directory above
-      # the content_dir.
-      return nil if (entry == '.' || entry == '.git') ||
-                    (entry == '..' && current_dir == settings.content_dir)
+    # DESCRIPTION
+    # Create a ListItem object for a given filename.
+    #
+    # PARAMETERS
+    # filename      (String) The filename.
+    # current_dir   (String) The current directory.
+    #
+    # RETURN
+    # Returns a ListItem object or nil (if there was an error).
+    #
+    # EXPLANATION
+    # First, return nil if the filename is the current directory, the Git directory or (if we are at
+    # the top of the content directory) the parent directory. Set the parent directory and then create
+    # the ListItem object. Return the ListItem object.
+    def create_item(filename, current_dir)
+      return nil if (filename == '.' || filename == '.git') ||
+                    (filename == '..' && current_dir == settings.content_dir)
 
-      # Set the parent directory.
       parent_dir = File.dirname(current_dir)
 
-      # Create the list item.
       list_item = ListItem.new
-      list_item.name = entry
+      list_item.name = filename
       list_item.path = (list_item.name == '..') ? parent_dir : current_dir + '/' + list_item.name
       list_item.is_file = File.file? list_item.path
       list_item.encoded = Base64.urlsafe_encode64(list_item.path)

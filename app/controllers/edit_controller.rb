@@ -20,9 +20,12 @@ class EditController < ApplicationController
     decoded_path = Base64.urlsafe_decode64 path
 
     @content = Hash.new
+    @content['message'] = (session[:message]) ? get_message(session[:message]) : nil
     @content['filename'] = File.basename decoded_path
     @content['contents'] = read_file decoded_path
     @content['path'] = path
+
+    session[:message] = nil
 
     erb :edit
   end
@@ -46,6 +49,7 @@ class EditController < ApplicationController
     contents = params[:contents]
     write_file decoded_path, contents
 
+    session[:message] = :save_ok
     redirect to('/' + path)
   end
 

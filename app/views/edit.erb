@@ -10,6 +10,14 @@
 </head>
 <body>
 
+  <% if @content['message'] %>
+  <div class="message"><%= @content['message'] %></div>
+  <% end %>
+
+  <% if @content['error'] %>
+  <div class="error"><%= @content['error'] %></div>
+  <% end %>
+
   <h2><%= @content['filename'] %></h2>
 
   <form action="/edit/save" method="post">

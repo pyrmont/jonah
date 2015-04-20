@@ -8,6 +8,7 @@ class ApplicationController < Sinatra::Application
     set :views, settings.root + '/app/views'
     set :content_dir, settings.root + '/content'
     set :master_branch, 'master'
+    enable :sessions
   end
 
   configure :development do
@@ -45,5 +46,23 @@ class ApplicationController < Sinatra::Application
     # Otherwise accept.
     return false
   end
+
+  # DESCRIPTION
+  # Get a message based on a particular message code.
+  #
+  # PARAMETERS
+  # message_code   (Symbol) A message_code.
+  #
+  # EXPLANATION
+  # First, set the message depending on the message code. If the code is not recognised, set a default
+  # message.
+  def get_message(message_code)
+    message = case message_code
+              when :save_ok then 'File saved.'
+              else 'This message code was not recognised.'
+              end
+  end
+
+
 
 end

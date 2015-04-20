@@ -22,10 +22,13 @@ class ApplicationController < Sinatra::Application
   #                 Base64-encoded.
   #
   # EXPLANATION
-  # First, check if the path is empty. Return false if it is. Then check if the path is not
-  # Base64-encoded. Return true if it is. Otherwise return false.
-  def reject?(path)
-    return false if path == nil
+  # First, check if the path is empty. Return false if it is and nil is allowed (otherwise return
+  # false). Then check if the path is not Base64-encoded. Return true if it is. Otherwise return false.
+  def reject?(path, empty_allowed: true)
+    if path == nil
+      return false if empty_allowed == true
+      return true if empty_allowed == false
+    end
 
     begin
       Base64.urlsafe_decode64 path

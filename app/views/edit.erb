@@ -12,9 +12,10 @@
 
   <h2><%= @content['filename'] %></h2>
 
-  <form action="/edit/save/" method="post">
+  <form action="/edit/save" method="post">
     <textarea name="contents"><%= @content['contents'] %></textarea>
     <input type="submit" value="Save">
+    <input type="hidden" name="path" value="<%= @content['path'] %>">
   </form>
 
 </body>

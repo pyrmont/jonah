@@ -2,14 +2,20 @@
 <html>
 <head>
   <title>List</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+  <link rel="stylesheet" href='/stylesheets/normalize.css' type='text/css'>
+  <link rel="stylesheet" href='/stylesheets/screen.css' type='text/css'>
 </head>
 <body>
+  <h4><a href="/edit/new/<%= parent_dir %>">Create File</a></h4>
   <ol>
-    <% for entry in @content['entries'] %>
-      <% if !entry.is_file || @content['is_editable'] %>
-        <li><a href="<%= entry.uri %>"><%= entry.name %></a></li>
+    <% for item in items %>
+      <% if !item.is_file || item.is_editable %>
+        <li><a href="<%= item.uri %>"><%= item.name %></a></li>
       <% else %>
-        <li><%= entry.name %></li>
+        <li><%= item.name %></li>
       <% end %>
     <% end %>
   </ol>

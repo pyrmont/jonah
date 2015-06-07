@@ -1,6 +1,10 @@
 body { font-family: "Helvetica Neue", sans; font-size: 1.4rem; margin: 3rem auto; width: 80%; }
 
-body div.message { background-color: #dff2bf; color: #4f8a10; font-size: 1.0rem; padding: 1rem; width: 100%; }
+body#editor div.message { background-color: #dff2bf; color: #4f8a10; font-size: 1.0rem; padding: 1rem; width: 100%; }
 
-body form textarea { font-family: 'Monaco', 'Consolas', 'Courier New', monospace; height: 30rem; padding: 1rem; width: 100%; }
-body form input[type='submit'] { background-color: #60b044; background-image: linear-gradient(#8add6d, #60b044); border: 1px solid #5ca941; color: #ffffff; font-size: 1rem; font-weight: 500; padding: 0.5rem 1rem; text-shadow: 0 -1px 0 rgba(0,0,0,0.15); }
+body#editor a.return { text-decoration: none; }
+body#editor a.return::before { content: '\2190'; padding-right: 1rem; }
+
+body#editor form input[type='text'] { border: 1px solid #dddddd; font-family: 'Monaco', 'Consolas', 'Courier New', monospace; margin-bottom: 2rem; padding: 1rem; width: 100%; }
+body#editor form textarea { border: 1px solid #dddddd; font-family: 'Monaco', 'Consolas', 'Courier New', monospace; height: 30rem; padding: 1rem; width: 100%; }
+body#editor form input[type='submit'] { background-color: #60b044; background-image: linear-gradient(#8add6d, #60b044); border: 1px solid #5ca941; color: #ffffff; font-size: 1rem; font-weight: 500; padding: 0.5rem 1rem; text-shadow: 0 -1px 0 rgba(0,0,0,0.15); }

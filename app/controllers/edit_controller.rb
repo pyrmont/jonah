@@ -1,7 +1,31 @@
 require 'base64'
 require 'git'
 
+require_relative '../models/repository'
+require_relative '../models/post'
+
 class EditController < ApplicationController
+
+  before do
+    @repo = Repository.new settings.content_dir
+  end
+
+  # DESCRIPTION
+  # Display a new editor for a given path.
+  #
+  # PARAMETERS
+  # :path   (String) A path somewhere in the content directory. This variable is expected to be
+  #                  Base64-encoded.
+  #
+  # EXPLANATION
+  # First, set the path variable. Then check if the path is valid and halt processing if not (rendering
+  # an error template). If the path is valid, render the new template.
+  get '/new/:path' do
+    parent_dir = params[:path]
+    halt 400, erb(:error) if reject? parent_dir, empty_allowed: false
+
+    erb :new, :locals => { :parent_dir => parent_dir }
+  end
 
   # DESCRIPTION
   # Display the content of a file in the editor for a given path.
@@ -17,17 +41,13 @@ class EditController < ApplicationController
   get '/:path' do
     path = params[:path]
     halt 400, erb(:error) if reject? path, empty_allowed: false
-    decoded_path = Base64.urlsafe_decode64 path
 
-    @content = Hash.new
-    @content['message'] = (session[:message]) ? get_message(session[:message]) : nil
-    @content['filename'] = File.basename decoded_path
-    @content['contents'] = read_file decoded_path
-    @content['path'] = path
+    post = Post.new(Base64.urlsafe_decode64 path)
 
+    message = (session[:message]) ? get_message(session[:message]) : nil
     session[:message] = nil
 
-    erb :edit
+    erb :edit, :locals => { :post => post, :flash => message, :error => nil }
   end
 
   # DESCRIPTION
@@ -42,39 +62,32 @@ class EditController < ApplicationController
   # TODO
   # There needs to be some sort of nonce for security.
   post '/save' do
-    path = params[:path]
-    halt 400, erb[:error] if reject? path, empty_allowed: false
-    decoded_path = Base64.urlsafe_decode64 path
+    action = params[:action]
+    halt 400, erb(:error) if action != 'create' && action != 'update'
 
-    contents = params[:contents]
-    write_file decoded_path, contents
+    if action == 'create'
+      name = params[:name]
+      parent_dir = params[:parent]
+      halt 400, erb(:error) if
+            reject?(Base64.urlsafe_encode64(name), empty_allowed: false, filename_only: true) ||
+            reject?(parent_dir, empty_allowed: false)
+      decoded_path = (Base64.urlsafe_decode64 parent_dir) + '/' + name
+      encoded_path = Base64.urlsafe_encode64 decoded_path
+    elsif action == 'update'
+      path = params[:path]
+      halt 400, erb(:error) if reject? path, empty_allowed: false
+      decoded_path = Base64.urlsafe_decode64 path
+      encoded_path = path
+    end
 
+    post = Post.new decoded_path
+    post.content = params[:content]
+    post.save
+
+    @repo.commit post, 'Jonah: User save.'
     session[:message] = :save_ok
-    redirect to('/' + path)
+
+    redirect to('/' + encoded_path)
   end
-
-  private
-
-    # DESCRIPTION
-    # Read the contents of a given file into a String.
-    #
-    # PARAMETERS
-    # path   (String) A file somewhere in content directory.
-    #
-    # RETURN
-    # Return the contents of the file.
-    def read_file(path)
-      contents = IO.read path
-    end
-
-    # DESCRIPTION
-    # Write the contents of a given String into a file.
-    #
-    # PARAMETERS
-    # path       (String) A file somewhere in content directory.
-    # contents   (String) The contents to paste.
-    def write_file(path, contents)
-      IO.write path, contents
-    end
 
 end

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>New</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+  <link rel="stylesheet" href='/stylesheets/normalize.css' type='text/css'>
+  <link rel="stylesheet" href='/stylesheets/screen.css' type='text/css'>
+</head>
+<body id="editor">
+
+  <h5><a class="return" href="/list/<%= parent_dir %>">Return</a></h5>
+
+  <form action="/edit/save" method="post">
+    <input type="text" name="name">
+    <textarea name="content"></textarea>
+    <input type="submit" value="Save">
+    <input type="hidden" name="action" value="create">
+    <input type="hidden" name="parent" value="<%= parent_dir %>">
+  </form>
+
+</body>
+</html>

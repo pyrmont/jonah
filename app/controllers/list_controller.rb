@@ -1,13 +1,15 @@
 require 'base64'
 require 'git'
 
+require_relative '../models/repository'
+require_relative '../models/post'
+
 class ListController < ApplicationController
 
-  ListItem = Struct.new :name, :path, :is_file, :encoded, :uri
+  ListItem = Struct.new :name, :path, :is_file, :encoded_path, :uri, :is_editable
 
   before do
-    @repo = Git.open(settings.content_dir)
-    @is_editable = !@repo.branches[settings.master_branch.to_sym].current
+    @repo = Repository.new settings.content_dir
   end
 
   # DESCRIPTION
@@ -19,42 +21,26 @@ class ListController < ApplicationController
   #
   # EXPLANATION
   # First, check if the path has been set (and assigns it nil if not). Then check if the path is valid
-  # and halt processing if not (rendering an error template). If the path is valid, create a content
-  # variable for use in the template. Then render the list template.
+  # and halt processing if not (rendering an error template). If the path is valid, build a directory
+  # listing for the list template. Then render the list template.
   get '/:path?' do
     path = (params[:path]) ? params[:path] : nil
-
     halt 400, erb(:error) if reject? path
 
-    @content = Hash.new
-    @content['entries'] = build_list path
-    @content['is_editable'] = @is_editable
+    decoded_path = (path) ? Base64.urlsafe_decode64(path) : settings.content_dir
+    items = create_list decoded_path
+    encoded_path = (path) ? path : Base64.urlsafe_encode64(decoded_path)
 
-    erb :list
-  end
-
-  # DESCRIPTION
-  # Create a branch for the given directory.
-  #
-  # PARAMETERS
-  # :path   (String) A directory somewhere in the content directory. This variable is expected to be
-  #                  Base64-encoded.
-  #
-  # TODO
-  # It makes no sense to have a branch happen relative to a directory. Furthermore, this should be a
-  # post action, not a get action.
-  get '/branch/:path' do
-    return 'Error' if reject? path
+    erb :list, :locals => { :repo => @repo, :items => items, :parent_dir => encoded_path}
   end
 
   private
 
     # DESCRIPTION
-    # Create an array of ListItems for a given path (path is expected to be encoded in Base64).
+    # Create an array of ListItems for a given path.
     #
     # PARAMETERS
-    # path   (String) A directory somewhere in the content directory. This variable is expected to be
-    #                 Base64-encoded.
+    # path   (String) A directory somewhere in the content directory.
     #
     # RETURN
     # Returns an Array of ListItems (possibly empty).
@@ -64,9 +50,8 @@ class ListController < ApplicationController
     # path has been given, to the settings.content_dir variable. Then get the list of files in
     # current_dir. Based on this list, create a ListItem object and add it to the array. Return the
     # array.
-    def build_list(path)
-      decoded_path = (path) ? Base64.urlsafe_decode64(path) : false
-      current_dir = (decoded_path) ? decoded_path : settings.content_dir
+    def create_list(path)
+      current_dir = path
       entries = Dir.entries current_dir
 
       list = Array.new
@@ -75,7 +60,7 @@ class ListController < ApplicationController
         list.push list_item unless list_item == nil
       end
 
-      return list
+      list
     end
 
     # DESCRIPTION
@@ -93,19 +78,37 @@ class ListController < ApplicationController
     # the top of the content directory) the parent directory. Set the parent directory and then create
     # the ListItem object. Return the ListItem object.
     def create_item(filename, current_dir)
-      return nil if (filename == '.' || filename == '.git') ||
+      return nil if (filename == '.' || filename.start_with?('.')) ||
                     (filename == '..' && current_dir == settings.content_dir)
 
       parent_dir = File.dirname(current_dir)
-
+      puts current_dir + '/' + filename
       list_item = ListItem.new
       list_item.name = filename
       list_item.path = (list_item.name == '..') ? parent_dir : current_dir + '/' + list_item.name
       list_item.is_file = File.file? list_item.path
-      list_item.encoded = Base64.urlsafe_encode64(list_item.path)
-      list_item.uri = ((list_item.is_file) ? '/edit/' : '/list/') + list_item.encoded
+      list_item.encoded_path = Base64.urlsafe_encode64(list_item.path.gsub(settings.content_dir, ''))
+      list_item.uri = ((list_item.is_file) ? '/edit/' : '/list/') + list_item.encoded_path
+      list_item.is_editable = editable? list_item.name
 
-      return list_item
+      list_item
+    end
+
+    # DESCRIPTION
+    # Checks if a file is editable.
+    #
+    # PARAMETERS
+    # filename      (String) The filename.
+    #
+    # RETURN
+    # Return a boolean result.
+    #
+    # EXPLANATION
+    # First, get the extension based on the filename. Then, check if the extension exists in the
+    # settings.extensions variable set in ApplicationController.
+    def editable?(filename)
+      extension = (File.extname filename)[1..-1]
+      settings.extensions.include? extension
     end
 
 end

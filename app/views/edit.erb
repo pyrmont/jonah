@@ -8,22 +8,25 @@
   <link rel="stylesheet" href='/stylesheets/normalize.css' type='text/css'>
   <link rel="stylesheet" href='/stylesheets/screen.css' type='text/css'>
 </head>
-<body>
+<body id="editor">
 
-  <% if @content['message'] %>
-  <div class="message"><%= @content['message'] %></div>
+  <% if flash %>
+  <div class="message"><%= flash %></div>
   <% end %>
 
-  <% if @content['error'] %>
-  <div class="error"><%= @content['error'] %></div>
+  <% if error %>
+  <div class="error"><%= error %></div>
   <% end %>
 
-  <h2><%= @content['filename'] %></h2>
+  <h5><a class="return" href="/list/<%= post.encoded_parent %>">Return</a></h5>
+
+  <h2><%= post.basename %></h2>
 
   <form action="/edit/save" method="post">
-    <textarea name="contents"><%= @content['contents'] %></textarea>
+    <textarea name="content"><%= post.content %></textarea>
     <input type="submit" value="Save">
-    <input type="hidden" name="path" value="<%= @content['path'] %>">
+    <input type="hidden" name="action" value="update">
+    <input type="hidden" name="path" value="<%= post.encoded_path %>">
   </form>
 
 </body>

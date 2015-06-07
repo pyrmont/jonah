@@ -8,7 +8,7 @@ class ApplicationController < Sinatra::Application
     set :views, settings.root + '/app/views'
     set :content_dir, settings.root + '/content'
     set :master_branch, 'master'
-    enable :sessions
+    use Rack::Session::Cookie, :key => 'rack.session', :secret => 'super_secret'
   end
 
   configure :development do

@@ -20,9 +20,9 @@ class EditController < ApplicationController
   # EXPLANATION
   # First, set the path variable. Then check if the path is valid and halt processing if not (rendering
   # an error template). If the path is valid, render the new template.
-  get '/new/:path' do
+  get '/new/:path?' do
     parent_dir = params[:path]
-    halt 400, erb(:error) if reject? parent_dir, empty_allowed: false
+    halt 400, erb(:error) if reject? parent_dir
 
     erb :new, :locals => { :parent_dir => parent_dir }
   end
@@ -40,9 +40,9 @@ class EditController < ApplicationController
   # render the edit template.
   get '/:path' do
     path = params[:path]
-    halt 400, erb(:error) if reject? path, empty_allowed: false
+    halt 400, erb(:error) if reject? path
 
-    post = Post.new(Base64.urlsafe_decode64 path)
+    post = Post.new settings.content_dir, Base64.urlsafe_decode64(path)
 
     message = (session[:message]) ? get_message(session[:message]) : nil
     session[:message] = nil
@@ -68,19 +68,18 @@ class EditController < ApplicationController
     if action == 'create'
       name = params[:name]
       parent_dir = params[:parent]
-      halt 400, erb(:error) if
-            reject?(Base64.urlsafe_encode64(name), empty_allowed: false, filename_only: true) ||
-            reject?(parent_dir, empty_allowed: false)
+      halt 400, erb(:error) if reject?(Base64.urlsafe_encode64(name), filename: true) ||
+                               reject?(parent_dir)
       decoded_path = (Base64.urlsafe_decode64 parent_dir) + '/' + name
       encoded_path = Base64.urlsafe_encode64 decoded_path
     elsif action == 'update'
       path = params[:path]
-      halt 400, erb(:error) if reject? path, empty_allowed: false
+      halt 400, erb(:error) if reject? path
       decoded_path = Base64.urlsafe_decode64 path
       encoded_path = path
     end
 
-    post = Post.new decoded_path
+    post = Post.new settings.content_dir, decoded_path
     post.content = params[:content]
     post.save
 

@@ -84,32 +84,26 @@ class ApplicationController < Sinatra::Application
   # EXPLANATION
   # First, check if the path is empty. Return false if it is and nil is allowed (otherwise return
   # false). Then check if the path is not Base64-encoded. Return true if it is. Otherwise return false.
-  def reject?(path, empty_allowed: true, filename_only: false)
-    if path == nil || path.strip == ''
-      return false if empty_allowed == true
-      return true if empty_allowed == false
-    end
+  def reject?(path, filename: false)
+    return true if filename && (path == nil || path.strip == '')
 
     begin
-      decoded_path = Base64.urlsafe_decode64 path
+      decoded_path = (path == nil || path == '') ? '' : Base64.urlsafe_decode64(path)
     rescue ArgumentError
       return true
     end
+
+    # Reject if path starts with '/'.
+    return true if decoded_path.start_with? '/'
+
+    # Reject if path starts with '.'.
+    return true if decoded_path.start_with? '.'
 
     # Reject if path contains '..'.
     return true if decoded_path.include? '/../'
 
     # Reject if path contains '.'.
     return true if decoded_path.include? '/./'
-
-    # Reject if path starts with '.'.
-    return true if decoded_path.start_with? '.'
-
-    # Reject if path starts with '/'.
-    return true if filename_only && decoded_path.start_with?('/')
-
-    # Reject if path does not contain the content_dir.
-    return true if !filename_only && !(decoded_path.start_with?(settings.content_dir))
 
     # Otherwise accept.
     return false

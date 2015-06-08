@@ -6,7 +6,7 @@ require_relative '../models/post'
 
 class ListController < ApplicationController
 
-  ListItem = Struct.new :name, :path, :is_file, :encoded_path, :uri, :is_editable
+  ListItem = Struct.new :name, :path, :full_path, :is_file, :encoded_path, :uri, :is_editable
 
   before do
     @repo = Repository.new settings.content_dir
@@ -27,9 +27,9 @@ class ListController < ApplicationController
     path = (params[:path]) ? params[:path] : nil
     halt 400, erb(:error) if reject? path
 
-    decoded_path = (path) ? Base64.urlsafe_decode64(path) : settings.content_dir
+    decoded_path = (path) ? Base64.urlsafe_decode64(path) : ''
     items = create_list decoded_path
-    encoded_path = (path) ? path : Base64.urlsafe_encode64(decoded_path)
+    encoded_path = (path) ? '' : Base64.urlsafe_encode64(decoded_path)
 
     erb :list, :locals => { :repo => @repo, :items => items, :parent_dir => encoded_path}
   end
@@ -52,7 +52,7 @@ class ListController < ApplicationController
     # array.
     def create_list(path)
       current_dir = path
-      entries = Dir.entries current_dir
+      entries = Dir.entries(settings.content_dir + '/' + current_dir)
 
       list = Array.new
       entries.each do |entry|
@@ -79,15 +79,24 @@ class ListController < ApplicationController
     # the ListItem object. Return the ListItem object.
     def create_item(filename, current_dir)
       return nil if (filename == '.' || filename.start_with?('.')) ||
-                    (filename == '..' && current_dir == settings.content_dir)
+                    (filename == '..' && current_dir == '')
 
-      parent_dir = File.dirname(current_dir)
-      puts current_dir + '/' + filename
+      path = if (filename == '..')
+               current_dir
+             else
+               if (current_dir == '')
+                 filename
+               else
+                 current_dir + '/' + filename
+               end
+             end
+
       list_item = ListItem.new
       list_item.name = filename
-      list_item.path = (list_item.name == '..') ? parent_dir : current_dir + '/' + list_item.name
-      list_item.is_file = File.file? list_item.path
-      list_item.encoded_path = Base64.urlsafe_encode64(list_item.path.gsub(settings.content_dir, ''))
+      list_item.path = path
+      list_item.full_path = settings.content_dir + '/' + list_item.path
+      list_item.is_file = File.file? list_item.full_path
+      list_item.encoded_path = Base64.urlsafe_encode64 list_item.path
       list_item.uri = ((list_item.is_file) ? '/edit/' : '/list/') + list_item.encoded_path
       list_item.is_editable = editable? list_item.name
 

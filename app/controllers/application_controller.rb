@@ -11,36 +11,13 @@ class ApplicationController < Sinatra::Application
     set :master_branch, 'master'
     set :extensions, ['txt', 'md', 'markdown', 'text']
 
-    use Rack::Session::Cookie, :key => 'rack.session', :secret => 'super_secret'
+    use Rack::Session::Cookie,
+      :key => 'rack.session',
+      :secret => 'super_secret'
   end
 
   configure :development do
     disable :dump_errors
-  end
-
-  # DESCRIPTION
-  # Return the name of the current branch in the repository.
-  #
-  # PARAMETERS
-  # :repo   (Git::Base or Nil) The repository object returned by the get_repo() method.
-  #
-  # RETURN
-  # Return the current branch as a String (return an error message fi the repository is nil).
-  def current_branch(repo)
-    return "Error: Repository not editable" if repo == nil
-    repo.current_branch
-  end
-
-  # DESCRIPTION
-  # Checks if the repo is editable.
-  #
-  # PARAMETERS
-  # :repo   (Git::Base or Nil) The repository object returned by the get_repo() method.
-  #
-  # RETURN
-  # Return boolean result of whether the repo is editable.
-  def editable?(repo)
-    repo == nil ? false : true
   end
 
   # DESCRIPTION
@@ -59,31 +36,19 @@ class ApplicationController < Sinatra::Application
   end
 
   # DESCRIPTION
-  # Returns the repository.
-  #
-  # PARAMETERS
-  # :path   (String) The content directory.
-  # :master (Symbol) The name of the master branch.
-  #
-  # RETURN
-  # Return a Git::Base repository.
-  def get_repo(path, master)
-    repo = Git.open(path)
-  end
-
-  # DESCRIPTION
   # Reject the path if it is invalid.
   #
   # PARAMETERS
-  # path   (String) A directory somewhere in the content directory. This variable is expected to be
-  #                 Base64-encoded.
+  # path   (String) A directory somewhere in the content directory. This
+  #                 variable is expected to be Base64-encoded.
   #
   # RETURN
   # Return boolean result of whether the path should be rejected.
   #
   # EXPLANATION
-  # First, check if the path is empty. Return false if it is and nil is allowed (otherwise return
-  # false). Then check if the path is not Base64-encoded. Return true if it is. Otherwise return false.
+  # First, check if the path is empty. Return false if it is and nil is allowed
+  # (otherwise return false). Then check if the path is not Base64-encoded.
+  # Return true if it is. Otherwise return false.
   def reject?(path, filename: false)
     return true if filename && (path == nil || path.strip == '')
 

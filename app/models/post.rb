@@ -3,7 +3,8 @@ require 'base64'
 class Post
 
   attr_accessor :path, :content
-  attr_reader :content_dir, :full_path, :encoded_path, :basename, :parent, :encoded_parent
+  attr_reader :content_dir, :full_path, :encoded_path, :basename, :parent,
+              :encoded_parent
 
   def initialize(content_dir, path)
     @content_dir = content_dir

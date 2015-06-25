@@ -6,7 +6,8 @@ require_relative '../models/post'
 
 class ListController < ApplicationController
 
-  ListItem = Struct.new :name, :path, :full_path, :is_file, :encoded_path, :uri, :is_editable
+  ListItem = Struct.new :name, :path, :full_path, :is_file, :encoded_path,
+                        :uri, :is_editable
 
   before do
     @repo = Repository.new settings.content_dir
@@ -16,13 +17,14 @@ class ListController < ApplicationController
   # List the files in the given path.
   #
   # PARAMETERS
-  # :path   (String) A directory somewhere in the content directory. This variable is expected to be
-  #                  Base64-encoded.
+  # :path   (String) A directory somewhere in the content directory. This
+  #                  variable is expected to be Base64-encoded.
   #
   # EXPLANATION
-  # First, check if the path has been set (and assigns it nil if not). Then check if the path is valid
-  # and halt processing if not (rendering an error template). If the path is valid, build a directory
-  # listing for the list template. Then render the list template.
+  # First, check if the path has been set (and assigns it nil if not). Then
+  # check if the path is valid and halt processing if not (rendering an error
+  # template). If the path is valid, build a directory listing for the list
+  # template. Then render the list template.
   get '/:path?' do
     path = (params[:path]) ? params[:path] : nil
     halt 400, erb(:error) if reject? path
@@ -31,7 +33,9 @@ class ListController < ApplicationController
     items = create_list decoded_path
     encoded_path = (path) ? '' : Base64.urlsafe_encode64(decoded_path)
 
-    erb :list, :locals => { :repo => @repo, :items => items, :parent_dir => encoded_path}
+    erb :list, :locals => { :repo => @repo,
+                            :items => items,
+                            :parent_dir => encoded_path }
   end
 
   private
@@ -46,18 +50,18 @@ class ListController < ApplicationController
     # Returns an Array of ListItems (possibly empty).
     #
     # EXPLANATION
-    # First, decode the path parameter if it exists. Then set the current_dir to this path or, if no
-    # path has been given, to the settings.content_dir variable. Then get the list of files in
-    # current_dir. Based on this list, create a ListItem object and add it to the array. Return the
-    # array.
+    # First, decode the path parameter if it exists. Then set the current_dir
+    # to this path or, if no path has been given, to the settings.content_dir
+    # variable. Then get the list of files in current_dir. Based on this list,
+    # create a ListItem object and add it to the array. Return the array.
     def create_list(path)
       current_dir = path
       entries = Dir.entries(settings.content_dir + '/' + current_dir)
 
       list = Array.new
       entries.each do |entry|
-        list_item = create_item entry, current_dir
-        list.push list_item unless list_item == nil
+        li = create_item entry, current_dir
+        list.push li unless li == nil
       end
 
       list
@@ -74,9 +78,10 @@ class ListController < ApplicationController
     # Returns a ListItem object or nil (if there was an error).
     #
     # EXPLANATION
-    # First, return nil if the filename is the current directory, the Git directory or (if we are at
-    # the top of the content directory) the parent directory. Set the parent directory and then create
-    # the ListItem object. Return the ListItem object.
+    # First, return nil if the filename is the current directory, the Git
+    # directory or (if we are at the top of the content directory) the parent
+    # directory. Set the parent directory and then create the ListItem object.
+    # Return the ListItem object.
     def create_item(filename, current_dir)
       return nil if (filename == '.' || filename.start_with?('.')) ||
                     (filename == '..' && current_dir == '')
@@ -91,16 +96,16 @@ class ListController < ApplicationController
                end
              end
 
-      list_item = ListItem.new
-      list_item.name = filename
-      list_item.path = path
-      list_item.full_path = settings.content_dir + '/' + list_item.path
-      list_item.is_file = File.file? list_item.full_path
-      list_item.encoded_path = Base64.urlsafe_encode64 list_item.path
-      list_item.uri = ((list_item.is_file) ? '/edit/' : '/list/') + list_item.encoded_path
-      list_item.is_editable = editable? list_item.name
+      li = ListItem.new
+      li.name = filename
+      li.path = path
+      li.full_path = settings.content_dir + '/' + li.path
+      li.is_file = File.file? li.full_path
+      li.encoded_path = Base64.urlsafe_encode64 li.path
+      li.uri = ((li.is_file) ? '/edit/' : '/list/') + li.encoded_path
+      li.is_editable = editable? li.name
 
-      list_item
+      li
     end
 
     # DESCRIPTION
@@ -113,8 +118,9 @@ class ListController < ApplicationController
     # Return a boolean result.
     #
     # EXPLANATION
-    # First, get the extension based on the filename. Then, check if the extension exists in the
-    # settings.extensions variable set in ApplicationController.
+    # First, get the extension based on the filename. Then, check if the
+    # extension exists in the settings.extensions variable set in
+    # ApplicationController.
     def editable?(filename)
       extension = (File.extname filename)[1..-1]
       settings.extensions.include? extension
